@@ -10,7 +10,7 @@ Examples in the .png:
 
 This Xen ID can be used to get the specific disk ID with the xenstore-ls and xl commands:
 
-...
+```
     # xenstore-ls `xl block-list i-9-1452-VM | awk '{ print $7 }' | grep 5632`
     frontend = "/local/domain/386/device/vbd/5632"
     online = "1"
@@ -38,5 +38,5 @@ This Xen ID can be used to get the specific disk ID with the xenstore-ls and xl 
     sector-size = "512"
     kthread-pid = "32742"
     [root@mccpvm24 ~]# 
-...
+```
 
