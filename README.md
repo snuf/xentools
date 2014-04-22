@@ -3,12 +3,13 @@ gxentop
 Push VM statistics, cpu, disk and net from xentop to carbon either direct
 or by means of collectd, supports xapi and xm.
 
-2 Examples in the gxentop.pl-exampleGraphiteDashboard.png are nice:
+Examples in the .png:
 ---------
 * To net TX/RX: this is a routerVM controlled by cloudstack, and doing moderate network load. 
 * Top Read IO shows us the most misbehaving VM in our cloud; it seems that the VM from account id 9 with vm_instance id 1452 is the most misbehaving VM which is hammering the shared storage underneath, and it is doing this via a disk known to Xen with id 5632.
 
 This Xen ID can be used to get the specific disk ID with the xenstore-ls and xl commands:
+
 ...
     # xenstore-ls `xl block-list i-9-1452-VM | awk '{ print $7 }' | grep 5632`
     frontend = "/local/domain/386/device/vbd/5632"
@@ -38,3 +39,4 @@ This Xen ID can be used to get the specific disk ID with the xenstore-ls and xl 
     kthread-pid = "32742"
     [root@mccpvm24 ~]# 
 ...
+
