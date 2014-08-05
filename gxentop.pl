@@ -218,7 +218,10 @@ sub usage {
     print "-p (port number) port for direct graphite connection\n";
     print "-c collectd instead of graphite, prints to stdout\n";
     print "-d (number) interval for metrics\n";
-    print "$0: ((-t graphite_host) (-p port|2003)|-c) (-d delay|10)";
+    print "-D (number) Debug level\n";
+    print "-P (dot.seperated.prepend.for.graphite)\n";
+    print "-e (whatever) env append, deduced from dom0 name by default\n";
+    print "$0: ((-t graphite_host) (-p port|2003)|-c) (-d delay|10)\n";
     exit 1;
 }
 
@@ -226,13 +229,14 @@ sub usage {
 # Main
 ####
 my (%opts);
-getopts('cp:t:d:p:D', \%opts);
-usage if ($opts{h});
+getopts('cp:t:d:e:P:D:h', \%opts);
+usage if ($opts{h} || !%opts);
 my $collectd = $opts{c} || undef;
 my $delay = $opts{d} || 10;
 my $target = $opts{t} || "10.200.10.23";
 my $port = $opts{p} || 2003;
-my $prep = $opts{p} || undef; 
+my $prep = $opts{P} || undef; 
+my $env = $opts{e} || undef;
 if (!defined($DEBUG)) {
     $DEBUG = $opts{D} || 0;
 }
@@ -241,10 +245,14 @@ if (!defined($DEBUG)) {
 my $run = "xentop -d $delay -x -n -v -b";
 my @tm = qw(NAME STATE CPU_s CPU_pct MEM_k MEM_pct MAXMEM_k MAXMEM_pct VCPUS NETS NETTX_k NETRX_k VBDS VBD_OO VBD_RD VBD_WR VBD_RSECT VBD_WSECT SSID);
 chomp (my $dom0 = `hostname`);
-# distinguish between beta/prod and xenserver
-my $env=$dom0;
-$env=~s/\d+//;
-$prep = "vms.xensever.$env" if (!$prep);
+$prep = "vms.xensever" if (!$prep);
+# distinguish between beta/prod xenserver
+if (!$env) {
+    $env=$dom0;
+    $env=~s/[-\d+]+//;
+}
+$prep .= ".$env";
+
 
 ####
 my $data;
@@ -255,7 +263,7 @@ my $names;
 my $graphite = undef;
 # if debug don't send to graphite
 if ($DEBUG) {
-    print "debugging\n";
+    print "debugging: $DEBUG\n";
 } else {
     if (!$collectd) {
         close(STDIN);
@@ -269,7 +277,7 @@ if ($DEBUG) {
 # and leaves us hanging. So wait till a VM is spun up, as we know everything
 # works out then. (another VM besides dom0)
 my $vmcount = vmCount();
-while($vmcount < 2) {
+while($vmcount < 1) {
     print "Waiting for VMs to get assigned: $vmcount\n" if ($DEBUG);
     select(undef,undef,undef, $delay);
     $vmcount = vmCount();
@@ -287,11 +295,10 @@ while(<RUN>) {
             eval {
                 local $SIG{'ALRM'} = sub { die "zork" };
                 alarm(5);
-                $graphite->close();
                 $graphite = undef;
                 $graphite = conGraphite($target, $port);
                 alarm(0);
-            }
+            };
         }
         $names = getRealnames(10);
     # i-413-2523 --b--- 124076 1.1 4194256 1.6 4195328 1.6 2 1 
