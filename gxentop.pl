@@ -245,7 +245,7 @@ if (!defined($DEBUG)) {
 my $run = "xentop -d $delay -x -n -v -b";
 my @tm = qw(NAME STATE CPU_s CPU_pct MEM_k MEM_pct MAXMEM_k MAXMEM_pct VCPUS NETS NETTX_k NETRX_k VBDS VBD_OO VBD_RD VBD_WR VBD_RSECT VBD_WSECT SSID);
 chomp (my $dom0 = `hostname`);
-$prep = "vms.xensever" if (!$prep);
+$prep = "vms.xenserver" if (!$prep);
 # distinguish between beta/prod xenserver
 if (!$env) {
     $env=$dom0;
